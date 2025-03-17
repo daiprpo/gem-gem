@@ -236,7 +236,7 @@ class Bird {
         this.gravity = 0.5 * this.scale;
         this.lift = -12 * this.scale;
         this.skin = skin || 'default';
-        this.shielded = false;
+        this.shielded =  false;
         this.shieldTimer = 0;
     }
 
@@ -509,7 +509,6 @@ class Game {
     }
 }
 
-
 // Khởi chạy tải tài nguyên khi trang mở
 window.onload = () => {
     console.log('Bắt đầu tải tài nguyên');
@@ -518,7 +517,7 @@ window.onload = () => {
         console.error('Không tìm thấy phần tử countdown! Kiểm tra lại index.html');
         return;
     }
-    loadAllAssets(() => {
+    loadAllAssets(() => { // Sửa từ loadEssentialAssets thành loadAllAssets
         console.log('Hoàn tất tải tài nguyên, chuyển sang bước tiếp theo');
         loadingScreen.style.display = 'none';
         let savedSkin = localStorage.getItem('birdSkin');
@@ -533,13 +532,3 @@ window.onload = () => {
         }
     });
 };
-
-// Khởi động game
-loadEssentialAssets().then(() => {
-    const game = new Game();
-    game.start();
-    loadAudioAssets();
-}).catch(error => {
-    console.error('Lỗi khi tải hình ảnh:', error);
-});
-
