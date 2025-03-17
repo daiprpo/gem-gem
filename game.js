@@ -59,30 +59,42 @@ let flapSound = null, hitSound = null, scoreSound = null, bgMusic = null, poweru
 // Hàm tải hình ảnh
 function loadImages(callback) {
     const images = [birdImgs.default, birdImgs.red, birdImgs.blue, baseImg, bgImg, shieldImg];
+    const imageUrls = ['bird.png', 'bird_red.png', 'bird_blue.png', 'base.png', 'background.png', 'shield.png'];
     let loaded = 0;
+    let hasError = false;
 
     images.forEach((img, index) => {
         img.onload = () => {
             loaded++;
-            console.log(`Hình ảnh ${['bird.png', 'bird_red.png', 'bird_blue.png', 'base.png', 'background.png', 'shield.png'][index]} đã tải`);
+            console.log(`Hình ảnh ${imageUrls[index]} đã tải`);
             if (loaded === images.length) {
-                console.log('Tất cả hình ảnh đã tải');
+                if (hasError) {
+                    console.warn('Một số hình ảnh không tải được, nhưng tiếp tục với các hình ảnh đã tải');
+                }
+                console.log('Tất cả hình ảnh đã xử lý');
                 callback();
             }
         };
         img.onerror = () => {
-            console.error(`Lỗi tải hình ảnh ${['bird.png', 'bird_red.png', 'bird_blue.png', 'base.png', 'background.png', 'shield.png'][index]}`);
+            console.error(`Lỗi tải hình ảnh ${imageUrls[index]}. Kiểm tra xem file có tồn tại trên server không.`);
+            hasError = true;
             loaded++;
             if (loaded === images.length) {
-                console.log('Tất cả hình ảnh đã xử lý (có lỗi)');
+                if (hasError) {
+                    console.warn('Một số hình ảnh không tải được, nhưng tiếp tục với các hình ảnh đã tải');
+                }
+                console.log('Tất cả hình ảnh đã xử lý');
                 callback();
             }
         };
         if (img.complete && img.width > 0) {
             loaded++;
-            console.log(`Hình ảnh ${['bird.png', 'bird_red.png', 'bird_blue.png', 'base.png', 'background.png', 'shield.png'][index]} đã sẵn có trong cache`);
+            console.log(`Hình ảnh ${imageUrls[index]} đã sẵn có trong cache`);
             if (loaded === images.length) {
-                console.log('Tất cả hình ảnh đã tải');
+                if (hasError) {
+                    console.warn('Một số hình ảnh không tải được, nhưng tiếp tục với các hình ảnh đã tải');
+                }
+                console.log('Tất cả hình ảnh đã xử lý');
                 callback();
             }
         }
@@ -94,7 +106,7 @@ function loadAudio(url, callback) {
     fetch(url)
         .then(response => {
             if (!response.ok) {
-                console.warn(`${url} không tải được (404 hoặc lỗi khác), bỏ qua`);
+                console.warn(`${url} không tải được (HTTP ${response.status}). Kiểm tra xem file có tồn tại trên server không.`);
                 callback(null);
                 return;
             }
@@ -128,11 +140,15 @@ function loadAllAssets(callback) {
     loadImages(() => {
         console.log('Bắt đầu tải âm thanh');
         let loadedAudios = 0;
+        let hasAudioError = false;
         const audioFiles = ['flap.mp3', 'hit.mp3', 'score.mp3', 'bgMusic.mp3', 'powerup.mp3'];
         const audioBuffers = [];
 
         audioFiles.forEach((file, index) => {
             loadAudio(file, (buffer) => {
+                if (!buffer) {
+                    hasAudioError = true;
+                }
                 audioBuffers[index] = buffer;
                 loadedAudios++;
                 if (loadedAudios === audioFiles.length) {
@@ -141,6 +157,9 @@ function loadAllAssets(callback) {
                     scoreSound = audioBuffers[2];
                     bgMusic = audioBuffers[3];
                     powerupSound = audioBuffers[4];
+                    if (hasAudioError) {
+                        console.warn('Một số âm thanh không tải được, nhưng tiếp tục với các âm thanh đã tải');
+                    }
                     console.log('Tất cả âm thanh đã xử lý');
                     callback();
                 }
@@ -236,7 +255,7 @@ class Bird {
         this.gravity = 0.5 * this.scale;
         this.lift = -12 * this.scale;
         this.skin = skin || 'default';
-        this.shielded =  false;
+        this.shielded = false;
         this.shieldTimer = 0;
     }
 
@@ -517,7 +536,7 @@ window.onload = () => {
         console.error('Không tìm thấy phần tử countdown! Kiểm tra lại index.html');
         return;
     }
-    loadAllAssets(() => { // Sửa từ loadEssentialAssets thành loadAllAssets
+    loadAllAssets(() => {
         console.log('Hoàn tất tải tài nguyên, chuyển sang bước tiếp theo');
         loadingScreen.style.display = 'none';
         let savedSkin = localStorage.getItem('birdSkin');
